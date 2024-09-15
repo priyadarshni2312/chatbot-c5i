@@ -20,4 +20,4 @@ def add_chat_entry(user_id: int, question: str, response: str, db: SessionLocal)
     db.commit()
 
 def get_chat_history(user_id: int, db: SessionLocal):
-    return db.query(ChatHistory).filter(ChatHistory.user_id == user_id).order_by(ChatHistory.timestamp.desc()).all()
+    return db.query(ChatHistory).filter(ChatHistory.user_id == user_id).order_by(ChatHistory.timestamp.asc()).all()
