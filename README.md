@@ -52,7 +52,7 @@ This is a FastAPI-based chatbot application that integrates with an LLM (Mistral
    Update `DATABASE_URL` in `app/database.py` to match your MySQL server configuration:
 
    ```python
-   DATABASE_URL = "mysql+mysqlconnector://root:root1234@localhost:3306/chatbot"
+   DATABASE_URL = "mysql+mysqlconnector://mysql_user:password@localhost:3306/database"
    ```
 
 5. **Create Database Tables**
@@ -151,7 +151,7 @@ from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-DATABASE_URL = "mysql+mysqlconnector://root:root1234@localhost:3306/chatbot"
+DATABASE_URL = "mysql+mysqlconnector://mysql_user:password@localhost:3306/database"
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -205,7 +205,7 @@ Handles interaction with the LLM to generate SQL queries and convert SQL respons
 **Example**:
 
 ```python
-import os
+import os, dotenv
 import re
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_community.utilities import SQLDatabase
@@ -213,14 +213,15 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 
+dotenv.load_dotenv()
+
 # Define the HuggingFace endpoint for the LLM
-sec_key = "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"
-os.environ['HUGGINGFACEHUB_API_TOKEN'] = sec_key
+sec_key = os.environ.get('HUGGINGFACEHUB_API_KEY')
 repo_id = "mistralai/Mistral-7B-Instruct-v0.3"
 llm = HuggingFaceEndpoint(repo_id=repo_id, max_length=128, temperature=0.7, token=sec_key)
 
 # Define the MySQL database URI
-mysql_uri = 'mysql+mysqlconnector://root:root1234@localhost:3306/chatbot'
+mysql_uri = 'mysql+mysqlconnector://mysql_user:password@localhost:3306/database'
 db = SQLDatabase.from_uri(mysql_uri)
 
 def extract_sql_from_response(response):
