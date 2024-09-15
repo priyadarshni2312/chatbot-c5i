@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+sqlalchemy
+mysql-connector-python
+langchain
+langchain_huggingface
+langchain_community
