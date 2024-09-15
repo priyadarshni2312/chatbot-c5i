@@ -1,326 +1,163 @@
-# Customer Support Chatbot for Retail Analytics
+# Chatbot Assistant with FastAPI and React
 
-This is a FastAPI-based chatbot application that integrates with an LLM (Mistral-7B-Instruct-v0.3) to generate SQL queries based on user questions and provides human-readable summaries of SQL query results. The application interacts with a MySQL database to manage chat history and handle various operations.
+This project is a chatbot assistant designed for customer support, built using a FastAPI backend, React frontend, and SQLAlchemy for database interactions. The chatbot handles both normal conversational queries and database-related questions about sales and products. It generates SQL queries dynamically based on user inputs and provides human-readable summaries of the results.
 
 ## Features
 
-- **LLM Integration**: Utilizes Mistral-7B-Instruct-v0.3 to generate SQL queries and provide human-readable summaries.
-- **Database Interaction**: Connects to a MySQL database to execute SQL queries and manage chat history.
-- **Chat History Management**: Stores user questions, LLM-generated responses, and timestamps.
+- **Conversational Chatbot**: The chatbot responds to general queries with short, concise replies.
+- **Database Query Generation**: For questions involving sales, products, and customers, it generates and executes SQL queries, returning a human-readable summary.
+- **Chat History**: Retrieves and displays the previous chat history for a user.
+- **Integration with Hugging Face LLM**: Uses a pre-trained language model to handle text processing and query generation.
+- **React Frontend**: Provides an intuitive chat interface for users.
+
+## Technologies Used
+
+### Backend
+
+- **FastAPI**: For building the RESTful API and handling HTTP requests.
+- **SQLAlchemy**: For ORM-based database interactions.
+- **MySQL**: As the relational database to store product, customer, sales, and chat history data.
+- **Langchain**: For integrating the chatbot with an LLM for generating SQL queries and human-readable responses.
+- **HuggingFace API**: Used for the language model endpoint.
+
+### Frontend
+
+- **React**: For creating the user interface.
+- **Axios**: For making API requests to the backend.
+- **CSS**: For styling the chat components.
 
 ## Project Structure
 
-- `app/main.py`: Entry point for the FastAPI application.
-- `app/database.py`: Contains database setup and model definitions.
-- `app/chat_history.py`: Manages chat history.
-- `app/llm.py`: Handles LLM interactions for query generation and summarization.
-- `app/schemas.py`: Defines Pydantic models for request and response validation.
-- `requirements.txt`: Lists Python package dependencies.
+```bash
+.
+├── app/
+│   ├── chat_history.py         # Handles chat history model and functions
+│   ├── db.py                   # Database setup using SQLAlchemy
+│   ├── llm_integration.py      # LLM integration for SQL query generation
+│   ├── main.py                 # FastAPI setup and routes
+│   ├── models.py               # SQLAlchemy models for customers, products, and sales
+│   └── routes.py               # API endpoints for querying and fetching chat history
+├── chatbot-frontend/
+│   ├── src/
+│   │   ├── App.js              # Main React component
+│   │   ├── components/         # Contains React components for chat functionality
+│   │   └── ...
+├── data/
+│   ├── create_tables.sql       # SQL file for creating database tables
+│   ├── insert_data.sql         # SQL file for inserting sample data
+├── .env                        # Environment variables
+├── requirements.txt            # Python dependencies
+├── README.md                   # Project documentation
+└── ...
+```
 
-## Setup
+## Installation
 
 ### Prerequisites
 
-- Python 3.10+
-- MySQL server
-- Required Python packages
+- **Python 3.8+**
+- **Node.js 14+**
+- **MySQL**: Make sure MySQL server is running.
 
-### Installation
+### Backend Setup
 
-1. **Clone the Repository**
-
-   ```bash
-   git clone https://github.com/your-username/chatbot.git
-   cd chatbot
-   ```
-
-2. **Create a Virtual Environment**
+1. Clone the repository:
 
    ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   git clone https://github.com/your-repo/chatbot-assistant.git
+   cd chatbot-assistant
    ```
 
-3. **Install Dependencies**
+2. Set up a virtual environment:
 
    ```bash
-   pip install -r requirements.txt
+   python3 -m venv venv # for windows, "python -m venv venv"
+   source venv/bin/activate # for windows, "venv\Scripts\activate.bat"
    ```
 
-4. **Configure Database**
-
-   Update `DATABASE_URL` in `app/database.py` to match your MySQL server configuration:
-
-   ```python
-   DATABASE_URL = "mysql+mysqlconnector://mysql_user:password@localhost:3306/database"
-   ```
-
-5. **Create Database Tables**
-
-   Run the following command to create the necessary tables:
+3. Install dependencies:
 
    ```bash
-   python app/database.py
+   pip3 install -r requirements.txt # for windows, "pip install -r requirements.txt"
    ```
 
-### Running the Application
+4. Configure the `.env` file:
 
-To start the FastAPI server, use:
+   ```bash
+   touch .env
+   ```
 
-```bash
-uvicorn app.main:app --reload
-```
+   Add your MySQL and HuggingFace API credentials:
+
+   ```bash
+   MYSQL_USER=<your_mysql_user>
+   MYSQL_PASS=<your_mysql_password>
+   MYSQL_HOST=<your_mysql_host>
+   MYSQL_PORT=<your_mysql_port>
+   MYSQL_DB=<your_database_name>
+   HUGGINGFACEHUB_API_KEY=<your_huggingface_api_key>
+   ```
+
+5. Run the FastAPI backend:
+   ```bash
+   uvicorn app.main:app --reload
+   ```
+
+### Frontend Setup
+
+1. Navigate to the frontend directory:
+
+   ```bash
+   cd chatbot-frontend
+   ```
+
+2. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+3. Create react build:
+   ```bash
+   npm run build
+   mv build ../build
+   ```
+
+### Database Setup
+
+1. Import the tables and sample data using MySQL:
+   ```bash
+   mysql -u <username> -p <database_name> < data/create_tables.sql
+   mysql -u <username> -p <database_name> < data/insert_data.sql
+   ```
 
 ## API Endpoints
 
-### `POST /ask`
+### `/api/query/`
 
-Submit a question to the chatbot and receive an answer.
-
-**Request Body**:
-
-```json
-{
-  "question": "What is the total amount of revenue generated from selling speaker?"
-}
-```
-
-**Response**:
-
-```json
-{
-  "answer": "The total revenue generated from selling speakers is $540.00."
-}
-```
-
-### `GET /history`
-
-Retrieve chat history.
-
-**Response**:
-
-```json
-[
+- **Method**: `POST`
+- **Description**: Processes user input, generates an appropriate response (SQL or conversational), and stores the chat history.
+- **Request**:
+  ```json
   {
-    "id": 1,
-    "question": "What is the total amount of revenue generated from selling speakers?",
-    "answer": "The total revenue generated from selling speakers is $540.00.",
-    "timestamp": "2024-09-15T12:34:56"
+    "question": "What are the total sales for Laptops?"
   }
-]
-```
+  ```
+- **Response**:
+  ```json
+  {
+    "response": "The total sales for Laptops are $2401."
+  }
+  ```
 
-## Code Overview
+### `/api/chat-history/{user_id}`
 
-### `app/main.py`
+- **Method**: `GET`
+- **Description**: Retrieves chat history for a specific user.
 
-Defines the FastAPI application and endpoints for interacting with the chatbot.
+## Acknowledgements
 
-**Example**:
-
-```python
-from fastapi import FastAPI
-from pydantic import BaseModel
-from llm import generate_response
-from chat_history import add_chat_to_history, get_chat_history
-
-app = FastAPI()
-
-class Question(BaseModel):
-    question: str
-
-@app.post("/ask")
-def ask_question(question: Question):
-    answer = generate_response(question.question)
-    add_chat_to_history(question.question, answer)
-    return {"answer": answer}
-
-@app.get("/history")
-def history():
-    return get_chat_history()
-```
-
-### `app/database.py`
-
-Contains the database setup and model definitions. Ensure that `create_all_tables` is called to initialize the database.
-
-**Example**:
-
-```python
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-
-DATABASE_URL = "mysql+mysqlconnector://mysql_user:password@localhost:3306/database"
-
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
-
-class ChatHistory(Base):
-    __tablename__ = "chat_history"
-    id = Column(Integer, primary_key=True, index=True)
-    question = Column(String(255))
-    answer = Column(Text)
-    timestamp = Column(DateTime)
-
-def create_all_tables():
-    Base.metadata.create_all(bind=engine)
-```
-
-### `app/chat_history.py`
-
-Defines the `ChatHistory` model and functions for creating and managing chat history.
-
-**Example**:
-
-```python
-from sqlalchemy.orm import Session
-from database import SessionLocal, ChatHistory
-from datetime import datetime
-
-def add_chat_to_history(question: str, answer: str):
-    db: Session = SessionLocal()
-    db_chat = ChatHistory(
-        question=question,
-        answer=answer,
-        timestamp=datetime.now()
-    )
-    db.add(db_chat)
-    db.commit()
-    db.refresh(db_chat)
-    db.close()
-
-def get_chat_history():
-    db: Session = SessionLocal()
-    chats = db.query(ChatHistory).all()
-    db.close()
-    return chats
-```
-
-### `app/llm.py`
-
-Handles interaction with the LLM to generate SQL queries and convert SQL responses into human-readable summaries.
-
-**Example**:
-
-```python
-import os, dotenv
-import re
-from langchain_huggingface import HuggingFaceEndpoint
-from langchain_community.utilities import SQLDatabase
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnablePassthrough, RunnableLambda
-
-dotenv.load_dotenv()
-
-# Define the HuggingFace endpoint for the LLM
-sec_key = os.environ.get('HUGGINGFACEHUB_API_KEY')
-repo_id = "mistralai/Mistral-7B-Instruct-v0.3"
-llm = HuggingFaceEndpoint(repo_id=repo_id, max_length=128, temperature=0.7, token=sec_key)
-
-# Define the MySQL database URI
-mysql_uri = 'mysql+mysqlconnector://mysql_user:password@localhost:3306/database'
-db = SQLDatabase.from_uri(mysql_uri)
-
-def extract_sql_from_response(response):
-    sql_code = re.search(r".*(SELECT.*;).*", response, re.DOTALL)
-    if sql_code:
-        return sql_code.group(1).strip()
-    return response.strip()
-
-def get_schema(_):
-    return "The products table has the following columns: id, name, price. The customers table has columns: id, name, email. The sales table has columns: id, product_id, customer_id, quantity, sale_date."
-
-def run_query(query):
-    return db.run(query)
-
-query_template = """Based on the table schema below, write a SQL query that would answer the user's question:
-{schema}
-
-Question: {question}
-SQL Query:
-"""
-query_prompt = ChatPromptTemplate.from_template(query_template)
-
-response_template = """Convert the SQL response to human readable summary not exceeding 2 lines.
-Schema: {schema}
-Question: {question}
-SQL Query: {query}
-SQL Response: {response}
-Human-Readable Summary:
-"""
-response_prompt = ChatPromptTemplate.from_template(response_template)
-
-def generate_response(question: str):
-    sql_chain = (
-        RunnablePassthrough.assign(schema=get_schema)
-        | query_prompt
-        | llm.bind(stop=["\nSQLResult:"])
-        | StrOutputParser()
-        | RunnableLambda(extract_sql_from_response)
-    )
-    full_chain = (
-        RunnablePassthrough.assign(query=sql_chain).assign(
-            schema=get_schema,
-            response=lambda variables: run_query(variables['query'])
-        )
-        | response_prompt
-        | llm
-    )
-    response = full_chain.invoke({"question": question})
-    return response
-```
-
-### `app/schemas.py`
-
-Defines Pydantic models for validating request and response data.
-
-**Example**:
-
-```python
-from pydantic import BaseModel
-
-class Question(BaseModel):
-    question: str
-
-class HistoryItem(BaseModel):
-    id: int
-    question: str
-    answer: str
-    timestamp: str
-
-    class Config:
-        orm_mode = True
-```
-
-## Examples
-
-### Generating SQL Query
-
-For the question "What is the total amount of revenue generated from selling speakers?", the application generates the following SQL query:
-
-```sql
-SELECT SUM(quantity * price) AS total_revenue
-FROM sales
-JOIN products ON sales.product_id = products.id
-WHERE products.name = 'speaker';
-```
-
-### Human-Readable Summary
-
-The application converts the SQL response into a human-readable summary:
-
-```
-The total revenue generated from selling speakers is $540.00.
-```
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-```
-
-This Markdown file includes explanations, code snippets, and examples relevant to your chatbot application. Adjust any details as needed based on your specific requirements.
-```
+- [FastAPI](https://fastapi.tiangolo.com/)
+- [React](https://reactjs.org/)
+- [Langchain](https://langchain.com/)
+- [Hugging Face](https://huggingface.co/)
