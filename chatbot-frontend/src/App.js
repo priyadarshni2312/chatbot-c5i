@@ -3,6 +3,7 @@ import "./App.css";
 import Header from "./components/Header";
 import ChatWindow from "./components/ChatWindow";
 import ChatForm from "./components/ChatForm";
+import API_BASE_URL from "./config";
 import axios from "axios";
 
 function App() {
@@ -27,7 +28,7 @@ function App() {
 
     try {
       const response = await axios.post(
-        "http://localhost:8000/api/query/",
+        `${API_BASE_URL}/api/query/`,
         { question: input },
         { headers: { "Content-Type": "application/json" } }
       );
@@ -46,7 +47,7 @@ function App() {
     const fetchChatHistory = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:8000/api/chat-history/1"
+          `${API_BASE_URL}/api/chat-history/1`
         );
         const chatHistory = response.data.chat_history.flatMap((entry) => [
           {
